@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /*
  * Programmer: Christopher Wells
  * Date Started: 02/13/2021
@@ -14,26 +16,24 @@ public class GenericResource<T> {
 	//Data Definitions
 	
 	private class resourceNode {
-		private resourceNode nextNode; //Points to the next resource node in the list
-		private resourceNode previousNode;	//Points to the previous node in the list
 		private T quantityAvalible;	//How much of the resource is available?
 		private String resourceName;	//What is the mane of this resource.
 		private Boolean resourceConsumable;	//Is the resource consumed in the process of being used. ie a hammer can be used many times, but money only once.
 	}
 	
-	resourceNode currentPointer;
+	ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> ();
+	
 	//Constructors
 	
-	public GenericResource( T quanity, String name) 
+	//Setters 
+	 /*
+	  * Adds a resource element to the list is it does not already exist in the list.
+	  */
+	public Boolean addResource ( T quantity, String name)
 	{
-		currentPointer = new resourceNode();
-		currentPointer.nextNode = null;
-		currentPointer.previousNode = null;
-		currentPointer.resourceName = name;
-		currentPointer.quantityAvalible = quanity;
+		Boolean resultOfOperation = false; //The return value from the operation
+		
 	}
-	
-	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
