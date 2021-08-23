@@ -1,11 +1,20 @@
 import java.util.ArrayList;
+import java.util.Date;
 
 /*
  * Programmer: Christopher Wells
  * Date Started: 02/13/2021
+ * Updated: 08/15/2021 
+ * 	1. Preparation for the creation of the Generic Resource Manager.
+ * Updated: 08/232021
+ * 1. Added Handler for time based resources that have a window of time to be used
+ * 2. Added a data type for the date a resource is acquired
+ * 3. Added a data type to handle the deprecation in quantity over time
+ * 4. Added a data type for the expiration of the resource.
+ * 5. Added a data type for the type and subtype of a resource. 
  * Date Completed:
  * 
- * Version: 0.0.1 
+ * Version: 0.0.2 
  * 
  * 	This code will define the generic structure for a resource element. The resources will need a resource manager for the management and 
  * allocation of the resources to a project. 
@@ -15,24 +24,35 @@ public class GenericResource {
 
 	//Data Definitions
 	
+	/*
+	 * Defines the basic node that will store the resource information information.
+	 */
 	private class resourceNode {
 		private int quantityAvalible;	//How much of the resource is available?
 		private String resourceName;	//What is the mane of this resource.
 		private Boolean resourceConsumable;	//Is the resource consumed in the process of being used. ie a hammer can be used many times, but money only once.
+		private int timeBasedResource; //Stores if this is a time base resource 0=false 1=true (date based) 2=expiration by date Left room for other states
+		private int dateCodeEntered; //Date the resource was acquired
+		private int deprecatonAmount; //Handles cases where resource s consumed a little each day
+		private int experationDateCode; //Handles cases where there is a window to use the resource.
+		private int subType; 	//Will hold the subtype number for the resource
+		
 	}
 	
-	ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> ();
-	
+	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> ();
+	private int resType; 	//Holds the type code for the resource. This will be specific to this list
+	private int subtypeIndex; //Holds the last subtype defined number. Note: deleted sub-type number will not be re-assigned. 
 	//Constructors
 	
 	//Setters 
 	 /*
 	  * Adds a resource element to the list is it does not already exist in the list.
 	  */
-	public boolean addResource ( int quantity, String name, boolean consumable)
+	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, int dateEnteredCode, int depAmount, int expDateCode)
 	{
 		boolean resultOfOperation = false; //The return value from the operation used to determine the success of the operation
 		
+		//Check to see if the value provided was within acceptable bounds. Will have to deal with loans and negatives later
 		if (checkValue(quantity) == false )
 		{
 			System.out.println("Quantity Failed");
@@ -40,6 +60,7 @@ public class GenericResource {
 			//The value of the T is not an acceptable type
 		}
 		
+		//Check to see if the element being added is already in the list
 		if ( checkInList(name) != null)
 		{
 			System.out.println("Element is in the list Failed");
@@ -258,7 +279,7 @@ public class GenericResource {
 		
 	}
 	
-	
+	//Get the 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		GenericResource test = new GenericResource();
