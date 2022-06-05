@@ -41,14 +41,12 @@ public class GenericResource {
 		private long dateCodeEntered; //Date the resource was acquired
 		private float deprecatonAmount; //Handles cases where resource s consumed a little each day
 		private long experationDateCode; //Handles cases where there is a window to use the resource.
-		private int subType; 	//Will hold the subtype number for the resource
-		private int resourceType;	//This will be common for all resources in the list that this element is a member of
 		private int resourceNumber;	//The resource a number 
 	}
 	
-	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> ();
-	private int resType; 	//Holds the type code for the resource. This will be specific to this list
-	private int subtypeIndex; //Holds the last subtype defined number. Note: deleted sub-type number will not be re-assigned. 
+	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> (); 
+	private int maxResourcesDefined;	//Holds the number of the resource types defined.
+
 	//Constructors
 	
 	//Setters 
@@ -56,7 +54,7 @@ public class GenericResource {
 	  * Adds a resource element to the list is it does not already exist in the list.
 	  * This method allows for all of the elements to be added to the node at one time.
 	  */
-	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, long dateEnteredCode, float depAmount, long expDateCode, int subType, int resType, int resNumber)
+	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, long dateEnteredCode, float depAmount, long expDateCode, int resNumber)
 	{
 		boolean resultOfOperation = false; //The return value from the operation used to determine the success of the operation
 		
@@ -67,11 +65,11 @@ public class GenericResource {
 			return false;
 			//The value of the T is not an acceptable type
 		}
-		
+			
 		//Check to see if the element being added is already in the list
 		if ( checkInListByName(name) == true)
 		{
-			System.out.println("Element is in the list Failed");
+			System.out.println("Element is in the list Failed. Element cannot be added twice");
 			return false;
 		}
 		
@@ -82,21 +80,7 @@ public class GenericResource {
 			return false;
 			//The name string is empty and the operation can not be completed
 		}
-		
-		//Check to see if the sub type is valid
-		if ( checkSubType( subType) == false)
-		{
-			System.out.println("The sub-type is not valid");
-			return false;
-		}
-		
-		//Check to see if the resource type number is valid
-		if ( checkResType(resType) == false)
-		{
-			System.out.println("Resource number is not valid");
-			return false;
-		}
-		
+
 		//Check to see if the resource number is valid
 		if ( checkResNumber(resNumber))
 		{
@@ -218,22 +202,22 @@ public class GenericResource {
 			}
 		}
 		
-		//Set the Resource Sub Type Number
-		if (subType <= 0)
-		{
-			System.out.println("Error setting the sub type number the value provided is not valid.");
-			return false;
-		}
-		else
-		{
-			setSubType(tempNode, subType);
-		}
 		System.out.println("Adding element to the list");
 		resourceList.add(tempNode);
 		
 		return true;
 	}
 	
+	
+	public boolean loadResourceListFromFile()
+	{
+		return false;
+	}
+	
+	public boolean saveResourceListToFile()
+	{
+		return false;
+	}
 	/*****************************************************************************************************
 	 * Getter Functions
 	 * @param tempNode
@@ -280,18 +264,6 @@ public class GenericResource {
 	public long getExperationDateCode( resourceNode currentNode)
 	{
 		return currentNode.experationDateCode;
-	}
-	
-	//Get the sub type code of the resource
-	public int getSubType( resourceNode currentNode)
-	{
-		return currentNode.subType;
-	}
-	
-	//Get the resource type number
-	public int getResourceType( resourceNode currentNode)
-	{
-		return currentNode.resourceType;
 	}
 	
 	//Get the resource number 
@@ -372,14 +344,16 @@ public class GenericResource {
 		return true;
 	}
 
-	private void setSubType(resourceNode tempNode, int subType) {
-	// TODO Auto-generated method stub
-		tempNode.subType = subType;
-	}
-
+	//Checks to see if the resource number is in rance
+	//Checked: 6/3/2022
 	private boolean checkResNumber(int resNumber) {
 		// TODO Auto-generated method stub
-		return false;
+		if ((resNumber < 1) || (resNumber > this.maxResourcesDefined))
+		{
+			System.out.println("Error the resource number is out of range");
+			return false;
+		}
+		return true;
 	}
 
 
@@ -432,10 +406,7 @@ public class GenericResource {
 
 
 
-	private boolean checkResType(int resType2) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+	
 
 
 
@@ -478,19 +449,6 @@ public class GenericResource {
 
 
 
-
-
-
-
-
-
-
-
-
-	private boolean checkSubType(int subType) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 
 
@@ -650,7 +608,8 @@ public class GenericResource {
 	
 	//Checks to see if the resource is in the list, checks by name.
 	//Returns a pointer to the resource if it is found
-	//returns null otherwise.
+	//returns true if the element is in the list false otherwise.
+	//Checked: 6/3/2022
 	private boolean checkInListByName(String name)
 	{
 		if (this.resourceList.isEmpty())
@@ -715,18 +674,19 @@ public class GenericResource {
 	}
 	
 	//Checks the quantity value to ensure that the value provided is valid
-	//Situations like debt where the quantty of a resource will be negative will be 
-	//handled as a task.
+	//Situations like debt where the quantity of a resource will be negative will be 
+	//handled as a task. This also needs to be less than the max type of resources defined
+	//Checked 6/3/2022
 	private boolean checkValue( int type)
 	{
 				
-		if ( type < 0)	
+		if (( type < 0) || (type > this.maxResourcesDefined))	//Is not in the range of defined resources then there is an error
 		{
 			return false;
 		}
 		else
 		{
-			return true;
+			return true;	
 		}
 		
 	}
@@ -737,12 +697,13 @@ public class GenericResource {
 	// 1 = effected by time in a degredaton manner
 	// 2 = a resource that will expire, but not degrade
 	// 3 = a resource that will degrade and expire.
+	//Checked: 6/3/2022
 	private boolean checkTimeCode(int timeBased) {
-		// TODO Auto-generated method stub
 		if ( (timeBased >= 0) && ( timeBased < 4))
 		{
 			return true;
 		}
+		System.out.println("ERROR THE TIME CODE IS INVALID");
 		return false;
 	}
 	
@@ -754,7 +715,7 @@ public class GenericResource {
 		long temp = dateEnteredCode - 2109010000;
 		if ( temp < 0)
 		{
-			return false; //A value ledd than zero means that it was added before the program was written.
+			return false; //A value less than zero means that it was added before the program was written.
 		}
 		return true;
 	}
