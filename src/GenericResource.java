@@ -4,9 +4,9 @@ import java.util.Date;
 /*
  * Programmer: Christopher Wells
  * Date Started: 02/13/2021
- * Updated: 08/15/2021 
+ * Updated: 06/04/2022
  * 	1. Preparation for the creation of the Generic Resource Manager.
- * Updated: 08/232021
+ * Updated: 08/23/2021
  * 1. Added Handler for time based resources that have a window of time to be used
  * 2. Added a data type for the date a resource is acquired
  * 3. Added a data type to handle the deprecation in quantity over time
@@ -16,12 +16,18 @@ import java.util.Date;
  * 1. Worked on updating the add resource function to support new parameters for the resource.
  * Updated: 09/01/2021
  * 1. Worked on the helper functions.
+ * Updated: 09/16/2022
+ * 1. Changed Date format to YYYYMMDD	(There will need to be a day of the year for depricaton calculations)
+ * 2. Fixed some of the functions to support the addition of elements to the list.
+ * 3. Ran three basic tests.
  * Date Completed:
  * 
  * Version: 0.0.2 
  * 
  * 	This code will define the generic structure for a resource element. The resources will need a resource manager for the management and 
- * allocation of the resources to a project. 
+ * allocation of the resources to a project.
+ * Update: 06/04/2022
+ * 1.  
  */
 
 public class GenericResource {
@@ -39,19 +45,19 @@ public class GenericResource {
 		private long dateCodeEntered; //Date the resource was acquired
 		private float deprecatonAmount; //Handles cases where resource s consumed a little each day
 		private long experationDateCode; //Handles cases where there is a window to use the resource.
-		private int subType; 	//Will hold the subtype number for the resource
-		private int resType;	//This will be common for all resources in the list that this element is a member of
 		private int resourceNumber;	//The resource a number 
+		private int dayofTheYear;	//What day of the years was this added. 
 	}
 	
-	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> ();
-	private int resType; 	//Holds the type code for the resource. This will be specific to this list
-	private int subtypeIndex; //Holds the last subtype defined number. Note: deleted sub-type number will not be re-assigned. 
+	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> (); 
+	private int maxResourcesDefined = 100;	//Holds the number of the resource types defined.
+	private final int DAYS_OF_YEAR = 365;	//Holds the number of days in the year.
 	//Constructors
 	
 	//Setters 
 	 /*
 	  * Adds a resource element to the list is it does not already exist in the list.
+	  * This method allows for all of the elements to be added to the node at one time.
 	  */
 	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, long dateEnteredCode, float depAmount, long expDateCode, int resNumber)
 	{
@@ -64,11 +70,11 @@ public class GenericResource {
 			return false;
 			//The value of the T is not an acceptable type
 		}
-		
+			
 		//Check to see if the element being added is already in the list
-		if ( checkInListByName(name) == true)
+		if ( checkInListByName(name) != null)
 		{
-			System.out.println("Element is in the list Failed");
+			System.out.println("Element is in the list Failed. Element cannot be added twice");
 			return false;
 		}
 		
@@ -79,6 +85,13 @@ public class GenericResource {
 			return false;
 			//The name string is empty and the operation can not be completed
 		}
+
+		//Check to see if the resource number is valid
+		if ( checkResNumber(resNumber) == false)
+		{
+			System.out.println("Resource number is not valid");
+			return false;
+		}
 		
 		//Check to see that the code for the degradation of the resource is correct.
 		// 0 = A resource that is not effected by time
@@ -86,7 +99,7 @@ public class GenericResource {
 		// 2 = A resource that is subject to expiration, but does not degrade
 		// 3 = A resource that expires and degrades.
 		// There is space for the addition of new types of change.
-		if (checkTimeCode(timeBased))
+		if (checkTimeCode(timeBased) == false)
 		{
 			System.out.println("The time code provided is invalid");
 			return false;
@@ -178,7 +191,7 @@ public class GenericResource {
 		//Set the experation date of the resource.
 		if (( expDateCode == 2) || ( expDateCode == 3))
 		{
-			if ( expDateCode < 2109022122)	//this is today, so no resources could be added befor the program exists
+			if ( expDateCode < 2021)	//this is today, so no resources could be added before the program exists
 			{
 				System.out.println("Error the experation date is invald");
 				return false;
@@ -193,60 +206,169 @@ public class GenericResource {
 				}
 			}
 		}
+		
 		System.out.println("Adding element to the list");
 		resourceList.add(tempNode);
 		
 		return true;
 	}
 	
+	/*
+	 * This function is used to pull the resource list from the file
+	 * Ideally the class will be loaded and will look for the file and if it is not 
+	 * there it will start to make the resource list. It will alert and look for the 
+	 * user to stop this if there needs to be a file.
+	 */
+	public boolean loadResourceListFromFile()
+	{
+		return false;
+	}
 	
+	/*
+	 * This function will be run every so often to back the file up, but also at the 
+	 * end of the program use. This will store the file.
+	 */
+	public boolean saveResourceListToFile()
+	{
+		return false;
+	}
+	/*****************************************************************************************************
+	 * Getter Functions
+	 * @param tempNode
+	 * @param subType
+	 */
 	
-
+	//Get the quantity of the resource available 
+	public int getQuantityAvalibe( resourceNode currentNode)
+	{
+		return currentNode.quantityAvalible;
+	}
 	
-
+	//Get the Name of the resource
+	public String getResourceName( resourceNode currentNode)
+	{
+		return currentNode.resourceName;
+	}
 	
-
+	//Get if the resource is consumable
+	public Boolean getResourceConsumable (resourceNode currentNode)
+	{
+		return currentNode.resourceConsumable;
+	}
 	
+	//Get the code for the tme based resource.
+	public int getTimeBasedResource (resourceNode currentNode)
+	{
+		return currentNode.timeBasedResource;
+	}
 	
-
+	//Get the date that the resource was acquired
+	public long getDateCodeEntered( resourceNode currentNode)
+	{
+		return currentNode.dateCodeEntered;
+	}
 	
-
+	//Get the deprecation value
+	public float getDeprecationAmount( resourceNode currentNode)
+	{
+		return currentNode.deprecatonAmount;
+	}
 	
+	//Get the expiration date code
+	public long getExperationDateCode( resourceNode currentNode)
+	{
+		return currentNode.experationDateCode;
+	}
 	
-
+	//Get the resource number 
+	public int getResourceNumber( resourceNode currentNode)
+	{
+		return currentNode.resourceNumber;
+	}
 	
+	/*
+	 * Setter Functions
+	 */
+	
+	//Function sets the name of the resource.
+	public boolean setNameOfResource( resourceNode tempNode, String name)
+	{
+		boolean resultOfOperation = false; //Stores the value for the result of the operation
+		tempNode.resourceName = name;
 		
+		if ( tempNode.resourceName.isEmpty())
+		{
+			return resultOfOperation;
+		}
+			
+		return true;
+	}
 	
+	//Function sets the quantity of the resource available
+	public boolean setQuantityOfResource( resourceNode tempNode, int quantity)
+	{
+		if (tempNode == null)
+		{
+			return false;
+		}
+		tempNode.quantityAvalible = quantity;	
+		return true;		
+	}
 		
+	//Function sets the value to identify if the resource is consumable or durable
+	public boolean setConsumable( resourceNode tempNode, boolean consumable)
+	{
+		tempNode.resourceConsumable = consumable;
+		return true;
+	}
 		
-	
-	
-	
-	
-	
+	//Function sets the code for if the resource is time based.
+	public boolean setTimeCode(resourceNode tempNode, int timeBased) {
+	// TODO Auto-generated method stub
+		if (( timeBased < 0) || ( timeBased > 3))
+		{
+			return false;
+		}
+		if (tempNode == null)
+		{
+			return false;
+		}
+		tempNode.timeBasedResource = timeBased;
+		return true;
+	}
 
+	//Function will set the value of the date the resource is entered.
+	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
+		// TODO Auto-generated method stub
+		tempNode.dateCodeEntered = dateEnteredCode;
+		return true;
+	}
 
+	//Function sets the deprcation amount
+	public boolean setDepAmount(resourceNode tempNode, float depAmount) {
+		// TODO Auto-generated method stub
+		tempNode.deprecatonAmount = depAmount;
+		return true;
+	}
 
+	//Function sets the value for the experation of the resource.
+	public boolean setExpDate(resourceNode tempNode, long expDateCode) {
+		// TODO Auto-generated method stub
+		tempNode.experationDateCode = expDateCode;
+		return true;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	//Checks to see if the resource number is in range
+	//Checked: 6/3/2022
+	private boolean checkResNumber(int resNumber) {
+		// TODO Auto-generated method stub
+		if ((resNumber < 1) || (resNumber > this.maxResourcesDefined))
+		{
+			System.out.println("Error the resource number is out of range");
+			return false;
+		}
+		return true;
+	}
 
 
 	public void printResourceList()
@@ -357,13 +479,14 @@ public class GenericResource {
 	
 	//Checks to see if the resource is in the list, checks by name.
 	//Returns a pointer to the resource if it is found
-	//returns null otherwise.
-	private boolean checkInListByName(String name)
+	//returns true if the element is in the list false otherwise.
+	//Checked: 6/3/2022
+	private resourceNode checkInListByName(String name)
 	{
 		if (this.resourceList.isEmpty())
 		{
-			System.out.println("ERROR EMPTY LIST");
-			return false; //This should never be the case. There should be a header node.
+			System.out.println("EMPTY LIST");
+			return null; //This should never be the case. There should be a header node.
 		}
 		else
 		{
@@ -375,14 +498,14 @@ public class GenericResource {
 				temp = this.resourceList.get(index);
 				if ( temp.resourceName.equalsIgnoreCase(name))
 				{
-					return true;
+					return temp;
 				}
 				else
 				{
 					index++;
 				}
 			}
-			return false;
+			return null;
 		}
 		
 		
@@ -422,18 +545,19 @@ public class GenericResource {
 	}
 	
 	//Checks the quantity value to ensure that the value provided is valid
-	//Situations like debt where the quantty of a resource will be negative will be 
-	//handled as a task.
+	//Situations like debt where the quantity of a resource will be negative will be 
+	//handled as a task. This also needs to be less than the max type of resources defined
+	//Checked 6/3/2022
 	private boolean checkValue( int type)
 	{
 				
-		if ( type < 0)	
+		if ( type < 0)	//Is not in the range of defined resources then there is an error
 		{
 			return false;
 		}
 		else
 		{
-			return true;
+			return true;	
 		}
 		
 	}
@@ -444,12 +568,13 @@ public class GenericResource {
 	// 1 = effected by time in a degredaton manner
 	// 2 = a resource that will expire, but not degrade
 	// 3 = a resource that will degrade and expire.
+	//Checked: 6/3/2022
 	private boolean checkTimeCode(int timeBased) {
-		// TODO Auto-generated method stub
 		if ( (timeBased >= 0) && ( timeBased < 4))
 		{
 			return true;
 		}
+		System.out.println("ERROR THE TIME CODE IS INVALID");
 		return false;
 	}
 	
@@ -461,7 +586,7 @@ public class GenericResource {
 		long temp = dateEnteredCode - 2109010000;
 		if ( temp < 0)
 		{
-			return false; //A value ledd than zero means that it was added before the program was written.
+			return false; //A value less than zero means that it was added before the program was written.
 		}
 		return true;
 	}
@@ -504,80 +629,15 @@ public class GenericResource {
 	//Setter Functions
 	//These functions will be used to set the values of the elements of the node.
 	
-	//Function sets the quantity of the resource available
-	public boolean setQuantityOfResource( resourceNode tempNode, int quantity)
-	{
-		if (tempNode == null)
-		{
-			return false;
-		}
-		tempNode.quantityAvalible = quantity;	
-		return true;		
-	}
 	
-	//Function sets the name of the resource.
-	public boolean setNameOfResource( resourceNode tempNode, String name)
-	{
-		boolean resultOfOperation = false; //Stores the value for the result of the operation
-		tempNode.resourceName = name;
-		
-		if ( tempNode.resourceName.isEmpty())
-		{
-			return resultOfOperation;
-		}
-		
-		return true;
-	}
-	
-	//Function sets the value to identify if the resource is consumable or durable
-	public boolean setConsumable( resourceNode tempNode, boolean consumable)
-	{
-		tempNode.resourceConsumable = consumable;
-		return true;
-	}
-	
-	//Function sets the code for if the resource is time based.
-	public boolean setTimeCode(resourceNode tempNode, int timeBased) {
-		// TODO Auto-generated method stub
-		if (( timeBased < 0) || ( timeBased > 3))
-		{
-			return false;
-		}
-		if (tempNode == null)
-		{
-			return false;
-		}
-		tempNode.timeBasedResource = timeBased;
-		return true;
-	}
-
-	//Function will set the value of the date the resource is entered.
-	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
-		// TODO Auto-generated method stub
-		tempNode.dateCodeEntered = dateEnteredCode;
-		return true;
-	}
-
-	//Function sets the deprcation amount
-	public boolean setDepAmount(resourceNode tempNode, float depAmount) {
-		// TODO Auto-generated method stub
-		tempNode.deprecatonAmount = depAmount;
-		return true;
-	}
-
-	//Function sets the value for the experation of the resource.
-	public boolean setExpDate(resourceNode tempNode, long expDateCode) {
-		// TODO Auto-generated method stub
-		tempNode.experationDateCode = expDateCode;
-		return true;
-	}
 	//Get the 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		GenericResource test = new GenericResource();
-		test.addResource(25, "Dollars", true);
-		test.addResource(30, "Hours", true);
-		test.addResource(1, "hammer", false);
+		//public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, long dateEnteredCode, float depAmount, long expDateCode, int resNumber)
+		test.addResource(25, "Dollars", true, 3, 20220915, 1, 20230915, 1);
+		test.addResource(30, "Hours", true, 1, 20220915, 1, 20230915, 2);
+		test.addResource(1, "hammer", false,1, 20220915, 1, 20230915, 3);
 		
 		test.printResourceList();
 		
