@@ -50,8 +50,10 @@ public class GenericResource {
 	}
 	
 	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> (); 
+
 	private int maxResourcesDefined = 100;	//Holds the number of the resource types defined.
 	private final int DAYS_OF_YEAR = 365;	//Holds the number of days in the year.
+
 	//Constructors
 	
 	//Setters 
@@ -191,7 +193,7 @@ public class GenericResource {
 		//Set the experation date of the resource.
 		if (( expDateCode == 2) || ( expDateCode == 3))
 		{
-			if ( expDateCode < 2021)	//this is today, so no resources could be added before the program exists
+			if ( expDateCode < 20210101)	//this is today, so no resources could be added before the program exists
 			{
 				System.out.println("Error the experation date is invald");
 				return false;
@@ -224,14 +226,16 @@ public class GenericResource {
 		return false;
 	}
 	
-	/*
-	 * This function will be run every so often to back the file up, but also at the 
-	 * end of the program use. This will store the file.
-	 */
+	public boolean loadResourceListFromFile()
+	{
+		return false;
+	}
+	
 	public boolean saveResourceListToFile()
 	{
 		return false;
 	}
+  
 	/*****************************************************************************************************
 	 * Getter Functions
 	 * @param tempNode
@@ -336,6 +340,40 @@ public class GenericResource {
 		tempNode.timeBasedResource = timeBased;
 		return true;
 	}
+
+	//Function will set the value of the date the resource is entered.
+	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
+		// TODO Auto-generated method stub
+		tempNode.dateCodeEntered = dateEnteredCode;
+		return true;
+	}
+
+	//Function sets the deprcation amount
+	public boolean setDepAmount(resourceNode tempNode, float depAmount) {
+		// TODO Auto-generated method stub
+		tempNode.deprecatonAmount = depAmount;
+		return true;
+	}
+
+	//Function sets the value for the experation of the resource.
+	public boolean setExpDate(resourceNode tempNode, long expDateCode) {
+		// TODO Auto-generated method stub
+		tempNode.experationDateCode = expDateCode;
+		return true;
+	}
+
+	//Checks to see if the resource number is in rance
+	//Checked: 6/3/2022
+	private boolean checkResNumber(int resNumber) {
+		// TODO Auto-generated method stub
+		if ((resNumber < 1) || (resNumber > this.maxResourcesDefined))
+		{
+			System.out.println("Error the resource number is out of range");
+			return false;
+		}
+		return true;
+	}
+
 
 	//Function will set the value of the date the resource is entered.
 	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
@@ -551,7 +589,7 @@ public class GenericResource {
 	private boolean checkValue( int type)
 	{
 				
-		if ( type < 0)	//Is not in the range of defined resources then there is an error
+		if (( type < 0) || (type > this.maxResourcesDefined))	//Is not in the range of defined resources then there is an error
 		{
 			return false;
 		}
