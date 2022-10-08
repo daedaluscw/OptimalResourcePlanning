@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.StringTokenizer;
 
 /*
  * Programmer: Christopher Wells
@@ -20,6 +21,13 @@ import java.util.Date;
  * 1. Changed Date format to YYYYMMDD	(There will need to be a day of the year for depricaton calculations)
  * 2. Fixed some of the functions to support the addition of elements to the list.
  * 3. Ran three basic tests.
+ * Updates: 09/17/2022
+ * 1. Started Work on setting the deprecation days number.
+ * 2. Got the code to work to break down the date code.
+ * Updates: 09/28/2022
+ * 1. Added function to convert list to CVS.
+ * Updates: 10/7/2022
+ * 1. Added function to convert an incoming CVS String to a Resource Element
  * Date Completed:
  * 
  * Version: 0.0.2 
@@ -42,18 +50,16 @@ public class GenericResource {
 		private String resourceName;	//What is the mane of this resource.
 		private Boolean resourceConsumable;	//Is the resource consumed in the process of being used. ie a hammer can be used many times, but money only once.
 		private int timeBasedResource; //Stores if this is a time base resource 0=false 1=true (date based) 2=expiration by date Left room for other states
-		private long dateCodeEntered; //Date the resource was acquired
+		private int dateCodeEntered; //Date the resource was acquired
 		private float deprecatonAmount; //Handles cases where resource s consumed a little each day
 		private long experationDateCode; //Handles cases where there is a window to use the resource.
 		private int resourceNumber;	//The resource a number 
-		private int dayofTheYear;	//What day of the years was this added. 
+		private int dayofTheYear;	//What day of the years was this added. This is for the deprication calculations
 	}
 	
 	private ArrayList<resourceNode> resourceList = new ArrayList<resourceNode> (); 
-
 	private int maxResourcesDefined = 100;	//Holds the number of the resource types defined.
 	private final int DAYS_OF_YEAR = 365;	//Holds the number of days in the year.
-
 	//Constructors
 	
 	//Setters 
@@ -61,7 +67,7 @@ public class GenericResource {
 	  * Adds a resource element to the list is it does not already exist in the list.
 	  * This method allows for all of the elements to be added to the node at one time.
 	  */
-	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, long dateEnteredCode, float depAmount, long expDateCode, int resNumber)
+	public boolean addResource ( int quantity, String name, boolean consumable, int timeBased, int dateEnteredCode, float depAmount, long expDateCode, int resNumber)
 	{
 		boolean resultOfOperation = false; //The return value from the operation used to determine the success of the operation
 		
@@ -131,10 +137,11 @@ public class GenericResource {
 		}
 		
 		//Check of the resource number is valid
-		if (( checkInListByNumber(resNumber) == true) || (resNumber < 0))
+		if (( checkInListByNumber(resNumber) == true) && (this.resourceList.isEmpty() == false))
 		{
 			System.out.println("Error the resource number is already in the list");
 			return false;
+			
 		}
 		
 		//The initial easy tests have passed and now a node has to be constructed to be added to the list
@@ -191,7 +198,7 @@ public class GenericResource {
 		}
 		
 		//Set the experation date of the resource.
-		if (( expDateCode == 2) || ( expDateCode == 3))
+		if (( timeBased == 2) || ( timeBased == 3))
 		{
 			if ( expDateCode < 20210101)	//this is today, so no resources could be added before the program exists
 			{
@@ -208,7 +215,13 @@ public class GenericResource {
 				}
 			}
 		}
-		
+		int year = 0;
+		int month = 0;
+		int day = 0;
+		year = (int)(dateEnteredCode / 10000);
+		month = (int)((dateEnteredCode - (year * 10000)) / 100);
+		day = (int)(dateEnteredCode - ((year * 10000) + (month * 100)));
+		System.out.println("Year: " + year + " Month: " + month + " day: " + day);
 		System.out.println("Adding element to the list");
 		resourceList.add(tempNode);
 		
@@ -226,16 +239,14 @@ public class GenericResource {
 		return false;
 	}
 	
-	public boolean loadResourceListFromFile()
-	{
-		return false;
-	}
-	
+	/*
+	 * This function will be run every so often to back the file up, but also at the 
+	 * end of the program use. This will store the file.
+	 */
 	public boolean saveResourceListToFile()
 	{
 		return false;
 	}
-  
 	/*****************************************************************************************************
 	 * Getter Functions
 	 * @param tempNode
@@ -342,41 +353,7 @@ public class GenericResource {
 	}
 
 	//Function will set the value of the date the resource is entered.
-	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
-		// TODO Auto-generated method stub
-		tempNode.dateCodeEntered = dateEnteredCode;
-		return true;
-	}
-
-	//Function sets the deprcation amount
-	public boolean setDepAmount(resourceNode tempNode, float depAmount) {
-		// TODO Auto-generated method stub
-		tempNode.deprecatonAmount = depAmount;
-		return true;
-	}
-
-	//Function sets the value for the experation of the resource.
-	public boolean setExpDate(resourceNode tempNode, long expDateCode) {
-		// TODO Auto-generated method stub
-		tempNode.experationDateCode = expDateCode;
-		return true;
-	}
-
-	//Checks to see if the resource number is in rance
-	//Checked: 6/3/2022
-	private boolean checkResNumber(int resNumber) {
-		// TODO Auto-generated method stub
-		if ((resNumber < 1) || (resNumber > this.maxResourcesDefined))
-		{
-			System.out.println("Error the resource number is out of range");
-			return false;
-		}
-		return true;
-	}
-
-
-	//Function will set the value of the date the resource is entered.
-	public boolean setDateAquired(resourceNode tempNode, long dateEnteredCode) {
+	public boolean setDateAquired(resourceNode tempNode, int dateEnteredCode) {
 		// TODO Auto-generated method stub
 		tempNode.dateCodeEntered = dateEnteredCode;
 		return true;
@@ -408,7 +385,128 @@ public class GenericResource {
 		return true;
 	}
 
-
+	public boolean convertListToCSV()
+	{
+		String returnString = "";	//This will be the string that will be passed to the file for storage.
+		int index= 0;
+		resourceNode tempNode = new resourceNode();
+		if (this.resourceList.isEmpty())
+		{
+			return false;
+			
+		}
+		else
+		{
+			while (index < this.resourceList.size())
+			{
+				tempNode = resourceList.get(index);
+				returnString += String.valueOf(tempNode.quantityAvalible);
+				returnString += "'";
+				returnString += tempNode.resourceName;
+				returnString += "'";
+				returnString += String.valueOf(tempNode.resourceConsumable);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.timeBasedResource);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.dateCodeEntered);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.deprecatonAmount);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.experationDateCode);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.resourceNumber);
+				returnString += "'";
+				returnString += String.valueOf(tempNode.dayofTheYear);
+				returnString += "'";
+				System.out.println(returnString);
+				index++;
+			}
+			return true;
+		}
+		
+	}
+	
+	public boolean convertCVSStringToResource(String cvsInput)
+	{
+		boolean returnValue = false;
+		resourceNode tempNode = new resourceNode();
+		StringTokenizer st = new StringTokenizer(cvsInput, ",");
+		String temp;
+		int index = 0;
+		
+		if (cvsInput.isEmpty())
+		{
+			return returnValue;
+		}
+		else
+		{
+			while (st.hasMoreTokens()) {
+		        temp = st.nextToken();
+		        
+		        index++;
+		        if (index == 1)
+		        {
+		        	tempNode.quantityAvalible = Integer.parseInt(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 2)
+		        {
+		        	tempNode.resourceName = temp; 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 3)
+		        {
+		        	tempNode.resourceConsumable = Boolean.parseBoolean(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 4)
+		        {
+		        	tempNode.timeBasedResource = Integer.parseInt(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 5)
+		        {
+		        	tempNode.dateCodeEntered = Integer.parseInt(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 6)
+		        {
+		        	tempNode.deprecatonAmount = Float.parseFloat(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 7)
+		        {
+		        	tempNode.experationDateCode = Long.parseLong(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 8)
+		        {
+		        	tempNode.resourceNumber = Integer.parseInt(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index == 9)
+		        {
+		        	tempNode.dayofTheYear = Integer.parseInt(temp); 
+		        	System.out.println(temp);
+		        	System.out.println(index);
+		        }
+		        if (index > 9)
+		        {
+		        	return false;
+		        }
+		     }
+			return true;
+		}
+	}
+	
 	public void printResourceList()
 	{
 		int listSize = this.resourceList.size();
@@ -589,7 +687,7 @@ public class GenericResource {
 	private boolean checkValue( int type)
 	{
 				
-		if (( type < 0) || (type > this.maxResourcesDefined))	//Is not in the range of defined resources then there is an error
+		if ( type < 0)	//Is not in the range of defined resources then there is an error
 		{
 			return false;
 		}
@@ -689,6 +787,8 @@ public class GenericResource {
 		{
 			System.out.println("Error deleting Hours");
 		}
+		test.convertListToCSV();
+		test.convertCVSStringToResource("8675301,Jenny,true,0,20221007,0.25,4545,12,7");
 		System.out.println("Program Done");
 	}
 
